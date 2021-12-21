@@ -1,9 +1,5 @@
 ﻿using OpenQA.Selenium;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace mantis_tests
 {
@@ -13,6 +9,7 @@ namespace mantis_tests
            : base(manager)
         {
         }
+        Mantis.MantisConnectPortTypeClient client = new Mantis.MantisConnectPortTypeClient();
         public ProjectManagementHelper Create(ProjectData project)
         {
             manager.Manage.OpenManagePage();
@@ -22,6 +19,19 @@ namespace mantis_tests
             FillProjectForm(project);
             SubmitProjectAction();
             System.Threading.Thread.Sleep(1000);
+
+            return this;
+        }
+
+        public ProjectManagementHelper CreateByService(ProjectData project, AccountData account)
+        {
+            client.mc_project_add(account.Username, account.Password, new Mantis.ProjectData
+            {
+                name = project.Name,
+                description = project.Description
+            });
+
+            projectCache = null;
 
             return this;
         }
@@ -36,6 +46,8 @@ namespace mantis_tests
             SubmitProjectDeleting();
             SubmitProjectAction();
             System.Threading.Thread.Sleep(1000);
+
+            projectCache = null;
 
             return this;
         }
@@ -74,6 +86,9 @@ namespace mantis_tests
 
         public int GetProjectCount()
         {
+            manager.Manage.OpenManagePage();
+            manager.Manage.OpenManageProjectsTab();
+
             return driver.FindElements(By.XPath("//table//td/a")).Count;
         }
 
@@ -100,5 +115,21 @@ namespace mantis_tests
             return new List<ProjectData>(projectCache);
         }
 
+        public List<ProjectData> GetProjectListByService(AccountData account)
+        {
+            if (projectCache == null)
+            {
+                projectCache = new List<ProjectData>();
+
+                Mantis.ProjectData[] result = client.mc_projects_get_user_accessible(account.Username, account.Password);
+
+                foreach(Mantis.ProjectData project in result)
+                {
+                    projectCache.Add(new ProjectData(project.name, project.description));
+                }
+            }
+
+            return new List<ProjectData>(projectCache);
+        }
     }
 }

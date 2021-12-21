@@ -13,18 +13,19 @@ namespace mantis_tests
         [Test]
         public void ProjectionDeletingTests()
         {
-            List<ProjectData> oldProjects = app.Project.GetProjectList();
+            AccountData account = new AccountData("administrator", "root");
+            List<ProjectData> oldProjects = app.Project.GetProjectListByService(account);
             if(oldProjects.Count == 0)
             {
                 ProjectData newproject = new ProjectData(GenerateRandomString(5), GenerateRandomString(10));
-                app.Project.Create(newproject);
+                app.Project.CreateByService(newproject, account);
                 oldProjects.Add(newproject);
             }
 
             ProjectData project = oldProjects[0];
             app.Project.Remove(0);
 
-            List<ProjectData> newProject = app.Project.GetProjectList();
+            List<ProjectData> newProject = app.Project.GetProjectListByService(account);
             oldProjects.Remove(project);
             oldProjects.Sort();
             newProject.Sort();
